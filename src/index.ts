@@ -14,12 +14,15 @@ type BuildingInfo = {
     production: number;
 }
 
-let buildings: { [key: string]: BuildingInfo} = {
+interface BuildingInfoTable {
+    [key: string] : BuildingInfo;
+}
+
+const initialBuildings: BuildingInfoTable = {
     collector: {
         name: 'collector',
         locked: false,
         quantity: 0,
-
         baseprice: 50,
         currentprice: 50,
         production: 1
@@ -42,23 +45,28 @@ let buildings: { [key: string]: BuildingInfo} = {
     },
 }
 
-let sugarCane = 0;
-let money = 0;
-let sugarCanePrice = 1;
-let totalProduction = 0;
-let refreshRate = 2
-let multiplier = 1.2;
+const initialState = {
+    sugarCane: 0,
+    money: 0,
+    sugarCanePrice: 1,
+    totalProduction: 0,
+    refreshRate: 2,
+    multiplier: 1.2,
+    buildings: initialBuildings satisfies BuildingInfoTable,
+}
+
+let state = structuredClone(initialState);
 
 function update_production() {
     let production = 0
-    for (const i in buildings) {
-        production += buildings[i].quantity * buildings[i].production;
+    for (const i in state.buildings) {
+        production += state.buildings[i].quantity * state.buildings[i].production;
     }
-    totalProduction = production;
-    production *= refreshRate;
-    sugarCane += production;
+    state.totalProduction = production;
+    production *= state.refreshRate;
+    state.sugarCane += production;
 }
-setInterval(update_production, refreshRate * 1000);
+setInterval(update_production, state.refreshRate * 1000);
 
 function ieee_eu_te_odeio(number: number): number{
     return Number(number.toFixed(2))
@@ -67,8 +75,8 @@ function ieee_eu_te_odeio(number: number): number{
 app.post('/init', (req, res) => {
     console.log('/init');
     req = req;
-    if (sugarCane == 0 && money == 0 && totalProduction == 0) {
-        sugarCane = 50;
+    if (state.sugarCane == 0 && state.money == 0 && state.totalProduction == 0) {
+        state.sugarCane = 50;
         res.status(200).json({status: 'sucesso', message: '+50 cana de açúcar!'});
     }
     else {
@@ -81,14 +89,7 @@ app.post('/init', (req, res) => {
 app.post('/reset', (req, res) => {
     console.log('/reset');
     req = req;
-    sugarCane = 0;
-    money = 0;
-    totalProduction = 0;
-
-    for (const i in buildings) {
-        buildings[i].currentprice = buildings[i].baseprice;
-        buildings[i].quantity = 0;
-    }
+    state = structuredClone(initialState);
 
     res.status(200).json({status: 'sucesso', message: 'reset'});
 });
@@ -102,14 +103,14 @@ app.get('/status', (req, res) => {
     console.log('/status');
     req = req;
     res.json({
-        'sugarcane': sugarCane,
-        'money': money,
-        'production': totalProduction,
+        'sugarcane': state.sugarCane,
+        'money': state.money,
+        'production': state.totalProduction,
     });
 });
 
 function buy_building(res: Response, buildingName: string, quantity: number) {
-    let building = buildings[buildingName];
+    let building = state.buildings[buildingName];
 
     if (!building) {
         res.status(400).json({
@@ -131,7 +132,7 @@ function buy_building(res: Response, buildingName: string, quantity: number) {
 
     for (let i = 0; i < quantity; i++) {
         cost += currentPrice;
-        currentPrice = ieee_eu_te_odeio(currentPrice * multiplier);
+        currentPrice = ieee_eu_te_odeio(currentPrice * state.multiplier);
     }
 
     if (quantity <= 0) {
@@ -142,11 +143,11 @@ function buy_building(res: Response, buildingName: string, quantity: number) {
         throw new Error();
     }
 
-    if (cost > money) {
+    if (cost > state.money) {
         res.status(400).json({
             status: 'falha',
             cost: cost,
-            money: money,
+            money: state.money,
             message: 'dinheiro insuficiente',
         });
         throw new Error();
@@ -154,7 +155,7 @@ function buy_building(res: Response, buildingName: string, quantity: number) {
 
     building.quantity += quantity;
     building.currentprice = currentPrice;
-    money = ieee_eu_te_odeio(money - cost)
+    state.money = ieee_eu_te_odeio(state.money - cost)
     return cost;
 }
 
@@ -163,7 +164,7 @@ app.get('/buildings', (req, res) => {
     let { buy, qnt } = req.query as { [key: string]: string | string[] };
 
     if (!buy) {
-        res.json(buildings);
+        res.json(state.buildings);
         return
     }
 
@@ -204,13 +205,13 @@ app.get('/sell', (req, res) => {
     let { qnt } = req.query as { [key: string]: string };
 
     if (!qnt) {
-        res.status(200).json({ sugarcaneprice: sugarCanePrice });
+        res.status(200).json({ sugarcaneprice: state.sugarCanePrice });
         return
     }
 
     let quantity = Number(qnt);
 
-    if (quantity > sugarCane || quantity < 0) {
+    if (quantity > state.sugarCane || quantity < 0) {
         res.status(400).json({
             status: 'falha',
             quantity: quantity,
@@ -219,10 +220,10 @@ app.get('/sell', (req, res) => {
         return
     }
 
-    sugarCane -= quantity;
-    let profit = ieee_eu_te_odeio(sugarCanePrice * quantity);
+    state.sugarCane -= quantity;
+    let profit = ieee_eu_te_odeio(state.sugarCanePrice * quantity);
     console.log(profit);
-    money = ieee_eu_te_odeio(money + profit);
+    state.money = ieee_eu_te_odeio(state.money + profit);
 
     res.json({
         status: 'sucesso',
