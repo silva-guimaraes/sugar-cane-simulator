@@ -15,7 +15,7 @@
         <main>
             <h2>Endpoints</h2>
             <ul>
-            <li>Todos os endpoints são acessados com um GET a não ser que o contrário seja dito.</li>
+            <li>Com exceção de <code>/init</code> e <code>/reset</code>, Todos os endpoints são acessados com um GET.</li>
             </ul>
             <h3>Init</h3>
             <p>Inicia o jogo. Apenas acessível com um POST.</p>
@@ -25,6 +25,7 @@
                 <li><a href="https://backefront.com.br/como-fazer-post-javascript-puro/" target="blank">Em JavaScript</a></li>
                 <li><a href="https://acervolima.com/solicitacoes-get-e-post-usando-python/" target="blank">Em Python</a></li>
             </ul>
+            <p>Como um POST só pode ser feito programaticamente, ele serve como uma boa introdução para a temática desse jogo. Não é necessário enviar nenhum conteúdo no body do pedido.<p>
             <h3>Status</h3>
             <p>Para exibir o dinheiro, quantidade de cana de açúcar e produção do jogador, use:</p>
             <pre>http://127.0.0.1:3000<strong>/status</strong></pre>
@@ -36,7 +37,7 @@
             <pre>http://127.0.0.1:3000/buildings<strong>?buy=collector</strong></pre>
             <p>Para comprar mais de uma construção de uma vez só, use a query <code>qnt</code>, de quantidade:</p>
             <pre>http://127.0.0.1:3000/buildings?buy=collector<strong>&qnt=100</strong></pre>
-            <p>Note que como o preço de venda de cada construção aumenta em 20% porcento após cada compra, o custo da compra de várias contruções ao mesmo tempo não será uma simples multiplicação entre o o preço e a quantidade. Por exemplo: o primeiro coletor irá custar, digamos, 100 em dinheiro, o segundo 120 (120% de 100), o terceiro 144 (120% de 120)...</p>
+            <p>Note que o preço de uma construção aumenta em 20% porcento após cada compra. O custo de várias construções ao mesmo tempo não será uma simples multiplicação entre o preço e a quantidade. Exemplo: o primeiro coletor irá custar, digamos, 100 em dinheiro, o segundo 120 (120% de 100), o terceiro 144 (120% de 120)...</p>
             <p>É possível também comprar mais de uma construção em sequência:</p>
             <pre>http://127.0.0.1:3000/buildings?buy=collector&qnt=100<strong>&buy=farmer&qnt=100</strong></pre>
             <p>Em casos como esse cada <code>qnt</code> fará referência á um <code>buy</code> respectivo. O segundo <code>qnt</code> fará referência ao segundo <code>buy</code>, o terceiro <code>qnt</code> fará referência ao terceiro <code>buy</code> e assim por diante.</p>
